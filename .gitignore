@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 .env.local
+
+# Never commit sample project deps
+sample-projects/**/node_modules
+sample-projects/**/package-lock.json
