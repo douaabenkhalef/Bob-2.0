@@ -1,0 +1,6 @@
+> broken-logic@1.0.0 test
+> node test.js
+
+FAIL: isAdult(20) should be true
+FAIL: isAdult(15) should be false
+FAIL: canDrive(true,false) should be true

@@ -1,6 +1,3 @@
-// Single point of contact for all Bob 2.0 API calls.
-// Every agent imports from here — never call Bob directly.
-
 const BOB_API_URL = process.env.BOB_API_URL || "https://api.bob.ibm.com/v1";
 const BOB_API_KEY = process.env.BOB_API_KEY;
 const BOB_MOCK    = process.env.BOB_MOCK === "true";
@@ -33,18 +30,52 @@ export async function bobInfer(systemPrompt, userPrompt) {
   return data.choices?.[0]?.message?.content ?? data.output ?? "";
 }
 
+// ---------------------------------------------------------------------------
+// MOCK MODE — deterministic responses per detected bug so the demo works
+// end-to-end without a real Bob key.
+// ---------------------------------------------------------------------------
 function mockInfer(systemPrompt, userPrompt) {
-  if (systemPrompt.includes("Diagnosis Agent")) {
+  const isDiagnose = systemPrompt.includes("Diagnosis Agent");
+  const isFix      = systemPrompt.includes("Fix Agent");
+
+  // Detect which sample project we're handling by looking at the inputs
+  const isLogicBug = userPrompt.includes("isAdult") || userPrompt.includes("canDrive");
+
+  if (isDiagnose && isLogicBug) {
+    return JSON.stringify({
+      rootCause: "isAdult uses assignment (=) instead of strict equality (===), and canDrive uses AND (&&) instead of OR (||)",
+      evidence: ["calculator.js:3", "calculator.js:7"],
+      confidence: 0.94,
+    });
+  }
+
+  if (isFix && isLogicBug) {
+    return JSON.stringify({
+      patches: [
+        {
+          file: "calculator.js",
+          newContent: `// Fixed: use === for comparison, || for OR\nexport function isAdult(age) {\n  return age >= 18;\n}\n\nexport function canDrive(hasLicense, hasPermit) {\n  return hasLicense || hasPermit;\n}\n`,
+        },
+      ],
+      rationale: "Replaced assignment with comparison, and AND with OR.",
+    });
+  }
+
+  // Default: broken-node (missing left-pad dependency)
+  if (isDiagnose) {
     return JSON.stringify({
       rootCause: "Missing dependency 'left-pad' imported in src/index.js but not listed in package.json",
       evidence: ["src/index.js:3", "package.json"],
       confidence: 0.92,
     });
   }
-  if (systemPrompt.includes("Fix Agent")) {
+  if (isFix) {
     return JSON.stringify({
       patches: [
-        { file: "package.json", newContent: '{"name":"demo","version":"1.0.0","dependencies":{"left-pad":"^1.3.0"},"scripts":{"test":"node test.js"}}' },
+        {
+          file: "package.json",
+          newContent: '{"name":"broken-node","version":"1.0.0","type":"module","dependencies":{"left-pad":"^1.3.0"},"scripts":{"test":"node test.js"}}',
+        },
       ],
       rationale: "Added missing left-pad dependency.",
     });
