@@ -1,4 +1,5 @@
 import { runPipeline } from "@/lib/agents/headAgent";
+import { readRepo } from "@/lib/readRepo";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -11,26 +12,14 @@ export async function POST(req) {
     return Response.json({ error: "projectName required" }, { status: 400 });
   }
 
-  const workDir = path.join(process.cwd(), "sample-projects", projectName);
+  const projectsRoot = path.join(process.cwd(), "sample-projects");
+  const workDir = path.join(projectsRoot, projectName);
 
-  // Guard against path traversal
-  if (!workDir.startsWith(path.join(process.cwd(), "sample-projects"))) {
+  if (!workDir.startsWith(projectsRoot)) {
     return Response.json({ error: "invalid projectName" }, { status: 400 });
   }
 
-  // Concatenate all repo files for context (skip node_modules, .git)
-  const files = await fs.readdir(workDir, { recursive: true }).catch(() => []);
-  let repoFiles = "";
-  for (const f of files) {
-    if (typeof f !== "string") continue;
-    if (f.includes("node_modules") || f.startsWith(".git")) continue;
-    const full = path.join(workDir, f);
-    const stat = await fs.stat(full).catch(() => null);
-    if (!stat || !stat.isFile()) continue;
-    const content = await fs.readFile(full, "utf8").catch(() => "");
-    repoFiles += `\n--- ${f} ---\n${content}\n`;
-  }
-
+  const repoFiles = await readRepo(workDir);
   const errorLog = await fs
     .readFile(path.join(workDir, "error.log"), "utf8")
     .catch(() => "");

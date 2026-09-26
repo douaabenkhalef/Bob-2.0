@@ -1,8 +1,35 @@
-// Fixed: use === for comparison, || for OR
-export function isAdult(age) {
+function add(a, b) {
+  return a + b;
+}
+
+function subtract(a, b) {
+  return a - b;
+}
+
+function multiply(a, b) {
+  return a * b;
+}
+
+function divide(a, b) {
+  if (b === 0) {
+    throw new Error('Cannot divide by zero');
+  }
+  return a / b;
+}
+
+function isAdult(age) {
   return age >= 18;
 }
 
-export function canDrive(hasLicense, hasPermit) {
-  return hasLicense || hasPermit;
+function canDrive(hasLicense, isSuspended) {
+  return hasLicense && !isSuspended;
 }
+
+export {
+  add,
+  subtract,
+  multiply,
+  divide,
+  isAdult,
+  canDrive
+};
