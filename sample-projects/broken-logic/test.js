@@ -1,4 +1,4 @@
-import { isAdult, canDrive } from "./calculator.js";
+const { isAdult, canDrive } = require("./calculator.js");
 
 let failed = false;
 

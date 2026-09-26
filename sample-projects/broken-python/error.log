@@ -1,0 +1,3 @@
+Two bugs present:
+1. sum_positive: loop starts at index 1 (range(1, len(numbers))), skipping the first element
+2. is_even: uses == 1 instead of == 0, inverted logic
