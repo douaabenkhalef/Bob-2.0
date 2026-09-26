@@ -1,2 +1,9 @@
-export function isAdult(age){return age>=18;}
-export function canDrive(a,b){return a||b;}
+function isAdult(age) {
+  return age >= 18;
+}
+
+function canDrive(hasLicense, hasPermit) {
+  return hasLicense || hasPermit;
+}
+
+module.exports = { isAdult, canDrive };

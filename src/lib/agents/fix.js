@@ -3,6 +3,7 @@ import { bobInfer } from "../bob/index.js";
 const SYSTEM = `You are the Fix Agent.
 
 Given a root-cause diagnosis and the repository files, produce a minimal patch.
+
 Return ONLY valid JSON, no markdown fences:
 
 {
@@ -12,24 +13,32 @@ Return ONLY valid JSON, no markdown fences:
   "rationale": "one sentence explaining the fix"
 }
 
-Rules:
+CRITICAL RULES:
+- LANGUAGE PRIORITY:
+  * If "requirements.txt" exists, this is a PYTHON project — patch .py files ONLY.
+    Never touch package.json.
+  * If "package.json" exists without requirements.txt, this is a NODE project —
+    patch .js / .json files.
 - Output the FULL new contents of each changed file, not a diff.
-- Only touch files that must change.
-- Keep the existing style and structure.`;
+- Only touch SOURCE files. Never touch lockfiles, node_modules, or .venv.
+- Keep the existing style and structure.
+- If you cannot determine a fix, return { "patches": [], "rationale": "explanation" }.`;
 
-/**
- * @param {object} args
- * @param {{rootCause:string, evidence:string[], confidence:number}} args.diagnosis
- * @param {string} args.repoFiles
- * @returns {Promise<{patches:Array<{file:string,newContent:string}>, rationale:string}>}
- */
 export async function fix({ diagnosis, repoFiles }) {
   const user = `# Diagnosis\n${JSON.stringify(diagnosis, null, 2)}\n\n# Repo files\n${repoFiles}`;
   const raw = await bobInfer(SYSTEM, user);
 
   try {
     const cleaned = raw.replace(/^```json\s*|\s*```$/g, "").trim();
-    return JSON.parse(cleaned);
+    const parsed  = JSON.parse(cleaned);
+
+    // Guard: strip any lockfile patches the model sneaks in
+    if (Array.isArray(parsed.patches)) {
+      parsed.patches = parsed.patches.filter(
+        (p) => !/(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)/.test(p.file)
+      );
+    }
+    return parsed;
   } catch {
     return { patches: [], rationale: raw };
   }
