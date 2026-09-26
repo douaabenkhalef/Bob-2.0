@@ -15,7 +15,11 @@ export async function verify({ workDir, patches = [] }) {
     await fs.writeFile(target, p.newContent, "utf8");
   }
 
-  // 2. Build test command
+  // 2. Nuke any stale lockfile / node_modules so npm install starts clean
+  await fs.rm(path.join(workDir, "package-lock.json"), { force: true }).catch(() => {});
+  await fs.rm(path.join(workDir, "node_modules"), { recursive: true, force: true }).catch(() => {});
+
+  // 3. Build test command
   const hasPkg = await fs.access(path.join(workDir, "package.json"))
     .then(() => true).catch(() => false);
 
