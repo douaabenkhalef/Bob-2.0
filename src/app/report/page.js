@@ -13,16 +13,13 @@ function ReportInner() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!project) return;
-    fetch("/api/run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ projectName: project }),
-    })
-      .then((r) => r.json())
-      .then(setData)
-      .catch((e) => setError(String(e)));
-  }, [project]);
+  if (!project) return;
+  fetch(`/api/run?project=${encodeURIComponent(project)}`)
+    .then((r) => r.json())
+    .then(setData)
+    .catch((e) => setError(String(e)));
+}, [project]);
+ 
 
   if (error) return <div className="p-8 text-red-600">Error: {error}</div>;
   if (!data) return <div className="p-8">Loading report…</div>;

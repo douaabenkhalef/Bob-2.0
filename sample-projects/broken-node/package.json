@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
+    "pretest": "npm install",
     "test": "node test.js"
   },
   "keywords": [],
