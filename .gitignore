@@ -45,3 +45,4 @@ next-env.d.ts
 # Never commit sample project deps
 sample-projects/**/node_modules
 sample-projects/**/package-lock.json
+sample-projects/clone-*
